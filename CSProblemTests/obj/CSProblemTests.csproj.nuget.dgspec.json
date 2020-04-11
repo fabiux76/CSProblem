@@ -1,0 +1,70 @@
+{
+  "format": 1,
+  "restore": {
+    "/Users/fabioadani/Projects/Kata/CSProblem/CSProblemTests/CSProblemTests.csproj": {}
+  },
+  "projects": {
+    "/Users/fabioadani/Projects/Kata/CSProblem/CSProblemTests/CSProblemTests.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/Users/fabioadani/Projects/Kata/CSProblem/CSProblemTests/CSProblemTests.csproj",
+        "projectName": "CSProblemTests",
+        "projectPath": "/Users/fabioadani/Projects/Kata/CSProblem/CSProblemTests/CSProblemTests.csproj",
+        "packagesPath": "/Users/fabioadani/.nuget/packages/",
+        "outputPath": "/Users/fabioadani/Projects/Kata/CSProblem/CSProblemTests/obj/",
+        "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "/usr/local/share/dotnet/sdk/NuGetFallbackFolder"
+        ],
+        "configFilePaths": [
+          "/Users/fabioadani/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "netcoreapp2.2"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "netcoreapp2.2": {
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        }
+      },
+      "frameworks": {
+        "netcoreapp2.2": {
+          "dependencies": {
+            "Microsoft.NET.Test.Sdk": {
+              "target": "Package",
+              "version": "[15.9.0, )"
+            },
+            "Microsoft.NETCore.App": {
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[2.2.0, )",
+              "autoReferenced": true
+            },
+            "NUnit3TestAdapter": {
+              "target": "Package",
+              "version": "[3.11.0, )"
+            },
+            "nunit": {
+              "target": "Package",
+              "version": "[3.11.0, )"
+            }
+          },
+          "imports": [
+            "net461"
+          ],
+          "assetTargetFallback": true,
+          "warn": true
+        }
+      }
+    }
+  }
+}
