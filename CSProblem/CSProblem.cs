@@ -243,13 +243,13 @@ namespace CSProblem
     }
 
 
-    public class PeculiarConstraint : ICSConstraint
+    public class SkyskraperConstraint : ICSConstraint
     {
         protected List<CSVariable> orderedVariables;
         protected int numIncrements;
 
-        public PeculiarConstraint(List<CSVariable> orderedVariables, 
-                                  int numIncrements)
+        public SkyskraperConstraint(List<CSVariable> orderedVariables, 
+                                    int numIncrements)
         {
             this.orderedVariables = orderedVariables;
             this.numIncrements = numIncrements;

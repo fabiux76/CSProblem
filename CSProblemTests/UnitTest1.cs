@@ -129,5 +129,139 @@ namespace Tests
             Assert.IsTrue(solution[23].First(v => v.Variable.Name == "C").Value == 2);
             Assert.IsTrue(solution[23].First(v => v.Variable.Name == "D").Value == 1);
         }
+
+        [Test]
+        public void SolveSkykrapers2() {
+            const int size = 2;
+            var clues = new[]{ 2, 1, 1, 2, 2, 1, 1, 2};
+
+            var variables = new List<List<CSVariable>>();
+
+            for (var r = 0; r < size; r++) {
+                var rowVariables = new List<CSVariable>();
+                for (var c = 0; c < size; c++) {
+                    rowVariables.Add(new CSVariable($"{r}{c}", Enumerable.Range(1, size).ToList()));
+                }
+                variables.Add(rowVariables);
+            }
+
+            var constraints = new List<ICSConstraint>();
+
+            for (var r = 0; r < size; r++) {
+                constraints.Add(new AllDifferentConstraint(GetVariablesPerRow(r, variables).ToArray()));
+            }
+
+            for (var c = 0; c < size; c++) {
+                constraints.Add(new AllDifferentConstraint(GetVariablesPerColumn(c, variables).ToArray()));
+            }
+
+
+            for (int iClue = 0; iClue < size*4; iClue++) {
+                if (iClue < size) {
+                    var constraintVariables = GetVariablesPerColumn(iClue, variables);
+                    var constraint = new SkyskraperConstraint(constraintVariables, clues[iClue]);
+                    constraints.Add(constraint);
+                } else if (iClue < size * 2) {
+                    var relativeIClue = iClue - size;
+                    var constraintVariables = GetVariablesPerRow(relativeIClue, variables);
+                    constraintVariables = constraintVariables.AsEnumerable().Reverse().ToList();
+                    var constraint = new SkyskraperConstraint(constraintVariables, clues[iClue]);
+                    constraints.Add(constraint);
+                } else if (iClue < size * 3) {
+                    var relativeIClue = size * 3 - iClue - 1;
+                    var constraintVariables = GetVariablesPerColumn(relativeIClue, variables);
+                    constraintVariables = constraintVariables.AsEnumerable().Reverse().ToList();
+                    var constraint = new SkyskraperConstraint(constraintVariables, clues[iClue]);
+                    constraints.Add(constraint);
+                } else if (iClue < size * 4) {
+                    var relativeIClue = size * 4 - iClue - 1;
+                    var constraintVariables = GetVariablesPerRow(relativeIClue, variables);
+                    var constraint = new SkyskraperConstraint(constraintVariables, clues[iClue]);
+                    constraints.Add(constraint);
+                }
+            }
+
+            var csp = new CSProblem.CSProblem(variables.SelectMany(v => v).ToList(), constraints);
+            var solution = csp.Solve();
+
+        }
+
+        [Test]
+        public void SolveSkykrapers6() {
+            const int size = 6;
+            var clues = new[]{ 3, 2, 2, 3, 2, 1,
+                           1, 2, 3, 3, 2, 2,
+                           5, 1, 2, 2, 4, 3,
+                           3, 2, 1, 2, 2, 4};
+
+            var variables = new List<List<CSVariable>>();
+
+            for (var r = 0; r < size; r++) {
+                var rowVariables = new List<CSVariable>();
+                for (var c = 0; c < size; c++) {
+                    rowVariables.Add(new CSVariable($"{r}{c}", Enumerable.Range(1, size).ToList()));
+                }
+                variables.Add(rowVariables);
+            }
+
+            var constraints = new List<ICSConstraint>();
+
+            for (var r = 0; r < size; r++) {
+                constraints.Add(new AllDifferentConstraint(GetVariablesPerRow(r, variables).ToArray()));
+            }
+
+            for (var c = 0; c < size; c++) {
+                constraints.Add(new AllDifferentConstraint(GetVariablesPerColumn(c, variables).ToArray()));
+            }
+
+
+            for (int iClue = 0; iClue < size*4; iClue++) {
+                if (iClue < size) {
+                    var constraintVariables = GetVariablesPerColumn(iClue, variables);
+                    var constraint = new SkyskraperConstraint(constraintVariables, clues[iClue]);
+                    constraints.Add(constraint);
+                } else if (iClue < size * 2) {
+                    var relativeIClue = iClue - size;
+                    var constraintVariables = GetVariablesPerRow(relativeIClue, variables);
+                    constraintVariables = constraintVariables.AsEnumerable().Reverse().ToList();
+                    var constraint = new SkyskraperConstraint(constraintVariables, clues[iClue]);
+                    constraints.Add(constraint);
+                } else if (iClue < size * 3) {
+                    var relativeIClue = size * 3 - iClue - 1;
+                    var constraintVariables = GetVariablesPerColumn(relativeIClue, variables);
+                    constraintVariables = constraintVariables.AsEnumerable().Reverse().ToList();
+                    var constraint = new SkyskraperConstraint(constraintVariables, clues[iClue]);
+                    constraints.Add(constraint);
+                } else if (iClue < size * 4) {
+                    var relativeIClue = size * 4 - iClue - 1;
+                    var constraintVariables = GetVariablesPerRow(relativeIClue, variables);
+                    var constraint = new SkyskraperConstraint(constraintVariables, clues[iClue]);
+                    constraints.Add(constraint);
+                }
+            }
+
+            var csp = new CSProblem.CSProblem(variables.SelectMany(v => v).ToList(), constraints);
+            var solution = csp.Solve();
+
+            var orderedSolution = variables.Select(row => row.Select(variable => solution.GetValueFor(variable)));
+            var arrayLikeSolution = orderedSolution.Select(row => row.ToArray()).ToArray();
+
+            var expected = new[]{new []{ 2, 1, 4, 3, 5, 6}, 
+                             new []{ 1, 6, 3, 2, 4, 5}, 
+                             new []{ 4, 3, 6, 5, 1, 2}, 
+                             new []{ 6, 5, 2, 1, 3, 4}, 
+                             new []{ 5, 4, 1, 6, 2, 3}, 
+                             new []{ 3, 2, 5, 4, 6, 1 }};
+
+            CollectionAssert.AreEqual(expected, arrayLikeSolution);
+        }
+
+        private List<CSVariable> GetVariablesPerRow(int row, List<List<CSVariable>> allVariables) {
+            return allVariables[row];
+        }
+
+        private List<CSVariable> GetVariablesPerColumn(int column, List<List<CSVariable>> allVariables) {
+            return allVariables.Select(rowVar => rowVar[column]).ToList();
+        }
     }
 }
