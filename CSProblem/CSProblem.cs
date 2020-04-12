@@ -9,42 +9,29 @@ namespace CSProblem
         public List<ICSConstraint> Constraints {get; set;}
         public List<CSVariable> Variables {get; set;}
 
-        public CSProblem(List<CSVariable> variables, List<ICSConstraint> Constraints)
+        private const int ALL_SOLUTIONS = -1;
+
+        public CSProblem(List<CSVariable> variables, List<ICSConstraint> constraints)
         {
-            this.Constraints = Constraints;
-            this.Variables = Variables;
+            this.Constraints = constraints;
+            this.Variables = variables;
         }
 
         public List<List<CSVariableAssignedStatus>> Solve(int numSolution) {
-            throw new NotImplementedException();
+            var solutions = new List<List<CSVariableAssignedStatus>>();
+
+            var res = Solve1(numSolution, solutions, new List<CSVariableAssignedStatus>(), 
+                Variables.Select(v => new CSVariableUnassignedStatus(v, v.Domain)).ToList());
+
+            return solutions;
         }
 
         public List<CSVariableAssignedStatus> Solve() {
-            /*
-            Se ci sono variabili con dominio vuoto riporta fallimento ed esegui backtracking
-Se tutte le variabili sono istanziate (cioè è stata trovata una soluzione)
-Aggiungi la soluzione corrente all'insieme delle soluzioni trovate
-Se è stato raggiunto il numero di soluzioni richieste termina la risoluzione riportando successo
-Altrimenti backtracking per ricercare le altre soluzioni
-Altrimenti
-Seleziona la variabile corrente usando l'euristica specificata
-Seleziona il valore da assegnare alla variabile corrente secondo l'euristica specificata
-Salva lo stato corrente delle variabili
-Assegna il valore alla variabile corrente
-Effettua la propagazione dei vincoli usando l'algoritmo specificato
-Chiama ricorsivamente la risoluzione
-In caso di successo termina con successo
-Altrimenti
-Ripristina lo stato precedente delle variabili
-Rimuovi il valore appena considerato dal dominio della variabile corrente
-Scegli il valore successivo e invoca ricorsivamente la risoluzione 
-*/
-            var solutions = new List<List<CSVariableAssignedStatus>>();
+            return Solve(1)[0];
+        }
 
-            var res = Solve1(1, solutions, new List<CSVariableAssignedStatus>(), 
-                Variables.Select(v => new CSVariableUnassignedStatus(v, v.Domain)).ToList());
-
-            return solutions[0];
+        public List<List<CSVariableAssignedStatus>> SolveAll() {
+            return Solve(ALL_SOLUTIONS);
         }
 
         //true --> terminazione, false --> backtracking
@@ -63,10 +50,10 @@ Scegli il valore successivo e invoca ricorsivamente la risoluzione
 
             //Scelgo la variabile (secondo l'euristica)
             var currVar = ChooseNextVariable(unassignedVariables);
-            return Solve2(numSolutions, solutions, currVar, assignedVariables, unassignedVariables.Where(v => v != currVar).ToList());
+            return Solve2(numSolutions, solutions, currVar, assignedVariables, unassignedVariables);
         }
 
-        public bool Solve2(int numSolutions, 
+        private bool Solve2(int numSolutions, 
                             List<List<CSVariableAssignedStatus>> solutions, 
                             CSVariableUnassignedStatus currVar, 
                             List<CSVariableAssignedStatus> assignedVariables,
@@ -97,11 +84,20 @@ Scegli il valore successivo e invoca ricorsivamente la risoluzione
                 //TODO: non dovrebbe essere necessario
 
                 //e rimuovo il valore corrente (per la variabile corrente)
+                //Se è l'ultimo valore ritorno false
+                if (currVar.Domain.Count == 1) return false;
                 var currVarLimitedDomain = new CSVariableUnassignedStatus(currVar.Variable, 
                                                                           currVar.Domain.Where(d => d != currValue).ToList());
+
+                if (currVarLimitedDomain.Domain.Count == 0) return false;
+
+                //nelle unassigned varuables però devo modificare il dominio
+                var unassignedWithNewDomain = unassignedVariables
+                    .Select(v => (v.Variable == currVar.Variable) ? currVarLimitedDomain : v)
+                    .ToList();
  
                 //quindi passo al valore successivo (sempre per la variabile corrente)
-                return Solve2(numSolutions, solutions, currVarLimitedDomain, assignedVariables, unassignedVariables);
+                return Solve2(numSolutions, solutions, currVarLimitedDomain, assignedVariables, unassignedWithNewDomain);
             }
         }
 
@@ -150,7 +146,7 @@ Scegli il valore successivo e invoca ricorsivamente la risoluzione
                 unassignedVariables[i] = new CSVariableUnassignedStatus(currUnassigned.Variable, newDomain);
             }
 
-            return null;
+            return unassignedVariables;
         }
 
         private bool AreFulfillable(List<ICSConstraint> constraints, 
@@ -222,6 +218,27 @@ Scegli il valore successivo e invoca ricorsivamente la risoluzione
         public bool IsSatisfied(List<CSVariableAssignedStatus> environment)
         {
             return LambdaFunc(variables.Select(v => environment.GetValueFor(v)).ToList());
+        }
+    }
+
+    public class AllDifferentConstraint : ICSConstraint
+    {
+        private List<CSVariable> variables;
+
+        public AllDifferentConstraint(params CSVariable[] variables)
+        {
+            this.variables = variables.ToList();
+        }
+
+        public List<CSVariable> GetInvolvedVariables()
+        {
+            return variables;
+        }
+
+        public bool IsSatisfied(List<CSVariableAssignedStatus> environment)
+        {
+            return variables.Select(v => environment.GetValueFor(v))
+                        .Distinct().Count() == variables.Count();
         }
     }
 
@@ -315,7 +332,7 @@ Scegli il valore successivo e invoca ricorsivamente la risoluzione
         }
 
         public static List<CSVariableUnassignedStatus> RemoveUnassigned(this List<CSVariableUnassignedStatus> unassigned, CSVariable variable) {
-            return unassigned.Where(v => v.Variable == variable).ToList();
+            return unassigned.Where(v => v.Variable != variable).ToList();
         }
     }
 
