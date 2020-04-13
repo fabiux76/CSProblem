@@ -24,8 +24,8 @@ namespace Tests
             var csp = new CSProblem.CSProblem(new List<CSVariable> {v1, v2}, new List<ICSConstraint> {constraint});
 
             var solutions = csp.Solve();
-            Assert.IsTrue(solutions.First(v => v.Variable.Name == "A").Value == 1);
-            Assert.IsTrue(solutions.First(v => v.Variable.Name == "B").Value == 2);
+            Assert.IsTrue(solutions.Inner.First(v => v.Variable.Name == "A").Value == 1);
+            Assert.IsTrue(solutions.Inner.First(v => v.Variable.Name == "B").Value == 2);
         }
 
         [Test]
@@ -39,10 +39,10 @@ namespace Tests
             var csp = new CSProblem.CSProblem(new List<CSVariable> {v1, v2}, new List<ICSConstraint> {constraint});
 
             var solutions = csp.Solve(2);
-            Assert.IsTrue(solutions[0].First(v => v.Variable.Name == "A").Value == 1);
-            Assert.IsTrue(solutions[0].First(v => v.Variable.Name == "B").Value == 2);
-            Assert.IsTrue(solutions[1].First(v => v.Variable.Name == "A").Value == 2);
-            Assert.IsTrue(solutions[1].First(v => v.Variable.Name == "B").Value == 1);
+            Assert.IsTrue(solutions[0].Inner.First(v => v.Variable.Name == "A").Value == 1);
+            Assert.IsTrue(solutions[0].Inner.First(v => v.Variable.Name == "B").Value == 2);
+            Assert.IsTrue(solutions[1].Inner.First(v => v.Variable.Name == "A").Value == 2);
+            Assert.IsTrue(solutions[1].Inner.First(v => v.Variable.Name == "B").Value == 1);
 
         }
 
@@ -61,9 +61,9 @@ namespace Tests
             var csp = new CSProblem.CSProblem(new List<CSVariable> {v1, v2, v3}, new List<ICSConstraint> {constraint1, constraint2});
 
             var solutions = csp.Solve();
-            Assert.IsTrue(solutions.First(v => v.Variable.Name == "A").Value == 1);
-            Assert.IsTrue(solutions.First(v => v.Variable.Name == "B").Value == 2);
-            Assert.IsTrue(solutions.First(v => v.Variable.Name == "C").Value == 3);
+            Assert.IsTrue(solutions.Inner.First(v => v.Variable.Name == "A").Value == 1);
+            Assert.IsTrue(solutions.Inner.First(v => v.Variable.Name == "B").Value == 2);
+            Assert.IsTrue(solutions.Inner.First(v => v.Variable.Name == "C").Value == 3);
         }
 
         [Test]
@@ -78,10 +78,10 @@ namespace Tests
             var csp = new CSProblem.CSProblem(new List<CSVariable>{v1, v2, v3, v4}, new List<ICSConstraint>{constraint});
 
             var solution = csp.Solve();
-            Assert.IsTrue(solution.First(v => v.Variable.Name == "A").Value == 1);
-            Assert.IsTrue(solution.First(v => v.Variable.Name == "B").Value == 2);
-            Assert.IsTrue(solution.First(v => v.Variable.Name == "C").Value == 3);
-            Assert.IsTrue(solution.First(v => v.Variable.Name == "D").Value == 4);
+            Assert.IsTrue(solution.Inner.First(v => v.Variable.Name == "A").Value == 1);
+            Assert.IsTrue(solution.Inner.First(v => v.Variable.Name == "B").Value == 2);
+            Assert.IsTrue(solution.Inner.First(v => v.Variable.Name == "C").Value == 3);
+            Assert.IsTrue(solution.Inner.First(v => v.Variable.Name == "D").Value == 4);
         }
 
         [Test]
@@ -97,14 +97,14 @@ namespace Tests
 
             var solution = csp.Solve(24);
             Assert.IsTrue(solution.Count == 24);
-            Assert.IsTrue(solution[0].First(v => v.Variable.Name == "A").Value == 1);
-            Assert.IsTrue(solution[0].First(v => v.Variable.Name == "B").Value == 2);
-            Assert.IsTrue(solution[0].First(v => v.Variable.Name == "C").Value == 3);
-            Assert.IsTrue(solution[0].First(v => v.Variable.Name == "D").Value == 4);
-            Assert.IsTrue(solution[23].First(v => v.Variable.Name == "A").Value == 4);
-            Assert.IsTrue(solution[23].First(v => v.Variable.Name == "B").Value == 3);
-            Assert.IsTrue(solution[23].First(v => v.Variable.Name == "C").Value == 2);
-            Assert.IsTrue(solution[23].First(v => v.Variable.Name == "D").Value == 1);
+            Assert.IsTrue(solution[0].Inner.First(v => v.Variable.Name == "A").Value == 1);
+            Assert.IsTrue(solution[0].Inner.First(v => v.Variable.Name == "B").Value == 2);
+            Assert.IsTrue(solution[0].Inner.First(v => v.Variable.Name == "C").Value == 3);
+            Assert.IsTrue(solution[0].Inner.First(v => v.Variable.Name == "D").Value == 4);
+            Assert.IsTrue(solution[23].Inner.First(v => v.Variable.Name == "A").Value == 4);
+            Assert.IsTrue(solution[23].Inner.First(v => v.Variable.Name == "B").Value == 3);
+            Assert.IsTrue(solution[23].Inner.First(v => v.Variable.Name == "C").Value == 2);
+            Assert.IsTrue(solution[23].Inner.First(v => v.Variable.Name == "D").Value == 1);
         }
 
         [Test]
@@ -120,14 +120,14 @@ namespace Tests
 
             var solution = csp.SolveAll();
             Assert.IsTrue(solution.Count == 24);
-            Assert.IsTrue(solution[0].First(v => v.Variable.Name == "A").Value == 1);
-            Assert.IsTrue(solution[0].First(v => v.Variable.Name == "B").Value == 2);
-            Assert.IsTrue(solution[0].First(v => v.Variable.Name == "C").Value == 3);
-            Assert.IsTrue(solution[0].First(v => v.Variable.Name == "D").Value == 4);
-            Assert.IsTrue(solution[23].First(v => v.Variable.Name == "A").Value == 4);
-            Assert.IsTrue(solution[23].First(v => v.Variable.Name == "B").Value == 3);
-            Assert.IsTrue(solution[23].First(v => v.Variable.Name == "C").Value == 2);
-            Assert.IsTrue(solution[23].First(v => v.Variable.Name == "D").Value == 1);
+            Assert.IsTrue(solution[0].Inner.First(v => v.Variable.Name == "A").Value == 1);
+            Assert.IsTrue(solution[0].Inner.First(v => v.Variable.Name == "B").Value == 2);
+            Assert.IsTrue(solution[0].Inner.First(v => v.Variable.Name == "C").Value == 3);
+            Assert.IsTrue(solution[0].Inner.First(v => v.Variable.Name == "D").Value == 4);
+            Assert.IsTrue(solution[23].Inner.First(v => v.Variable.Name == "A").Value == 4);
+            Assert.IsTrue(solution[23].Inner.First(v => v.Variable.Name == "B").Value == 3);
+            Assert.IsTrue(solution[23].Inner.First(v => v.Variable.Name == "C").Value == 2);
+            Assert.IsTrue(solution[23].Inner.First(v => v.Variable.Name == "D").Value == 1);
         }
 
         [Test]

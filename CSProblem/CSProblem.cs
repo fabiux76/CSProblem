@@ -17,29 +17,33 @@ namespace CSProblem
             this.Variables = variables;
         }
 
-        public List<List<CSVariableAssignedStatus>> Solve(int numSolution) {
-            var solutions = new List<List<CSVariableAssignedStatus>>();
+        public List<AssignedVariablesCollection> Solve(int numSolution) {
+            var solutions = new List<AssignedVariablesCollection>();
 
-            var res = Solve1(numSolution, solutions, new List<CSVariableAssignedStatus>(), 
-                Variables.Select(v => new CSVariableUnassignedStatus(v, v.Domain)).ToList());
+            var res = Solve1(numSolution, 
+                             solutions, 
+                             new AssignedVariablesCollection{Inner = new List<CSVariableAssignedStatus>()}, 
+                             new UnassignedVariablesCollection{
+                                 Inner = Variables.Select(v => new CSVariableUnassignedStatus(v, v.Domain)).ToList()});
+                ;
 
             return solutions;
         }
 
-        public List<CSVariableAssignedStatus> Solve() {
+        public AssignedVariablesCollection Solve() {
             return Solve(1)[0];
         }
 
-        public List<List<CSVariableAssignedStatus>> SolveAll() {
+        public List<AssignedVariablesCollection> SolveAll() {
             return Solve(ALL_SOLUTIONS);
         }
 
         //true --> terminazione, false --> backtracking
         private bool Solve1(int numSolutions, 
-                            List<List<CSVariableAssignedStatus>> solutions,
-                            List<CSVariableAssignedStatus> assignedVariables,
-                            List<CSVariableUnassignedStatus> unassignedVariables) {
-            if (assignedVariables.Count == Variables.Count) {
+                            List<AssignedVariablesCollection> solutions,
+                            AssignedVariablesCollection assignedVariables,
+                            UnassignedVariablesCollection unassignedVariables) {
+            if (assignedVariables.Inner.Count == Variables.Count) {
                 //Devo aggiungere la soluzione corrente a quelle da ritornare
                 solutions.Add(assignedVariables);
 
@@ -54,12 +58,12 @@ namespace CSProblem
         }
 
         private bool Solve2(int numSolutions, 
-                            List<List<CSVariableAssignedStatus>> solutions, 
+                            List<AssignedVariablesCollection> solutions, 
                             CSVariableUnassignedStatus currVar, 
-                            List<CSVariableAssignedStatus> assignedVariables,
-                            List<CSVariableUnassignedStatus> unassignedVariables) {
+                            AssignedVariablesCollection assignedVariables,
+                            UnassignedVariablesCollection unassignedVariables) {
             // Se c'è almeno una variabile con dominio vuoto bisogna fare backtracking
-            if (unassignedVariables.Any(v => v.Domain.Count == 0)) return false;
+            if (unassignedVariables.Inner.Any(v => v.Domain.Count == 0)) return false;
 
             //Scelgo un valore per la variabile corrente secondo l'euristica
             var currValue = ChooseValueForVariable(currVar);
@@ -92,18 +96,18 @@ namespace CSProblem
                 if (currVarLimitedDomain.Domain.Count == 0) return false;
 
                 //nelle unassigned varuables però devo modificare il dominio
-                var unassignedWithNewDomain = unassignedVariables
+                var unassignedWithNewDomain = unassignedVariables.Inner
                     .Select(v => (v.Variable == currVar.Variable) ? currVarLimitedDomain : v)
                     .ToList();
  
                 //quindi passo al valore successivo (sempre per la variabile corrente)
-                return Solve2(numSolutions, solutions, currVarLimitedDomain, assignedVariables, unassignedWithNewDomain);
+                return Solve2(numSolutions, solutions, currVarLimitedDomain, assignedVariables, new UnassignedVariablesCollection {Inner = unassignedWithNewDomain});
             }
         }
 
-        List<CSVariableUnassignedStatus> Propagate(CSVariable lastAssignment, 
-                                                   List<CSVariableAssignedStatus> assignedVariables,
-                                                   List<CSVariableUnassignedStatus> unassignedVariables) {
+        UnassignedVariablesCollection Propagate(CSVariable lastAssignment, 
+                                                   AssignedVariablesCollection assignedVariables,
+                                                   UnassignedVariablesCollection unassignedVariables) {
             //Qua devo implementare tutto l'algoritmo di propagazione
 
             //Devo recuperare la lista di Constraints
@@ -117,8 +121,8 @@ namespace CSProblem
             //      Se questo non è vero cancello tale valore dal dominio della variabile corrente
             //TODO : IMPLEMEMTARE QUESTO
 
-            for (int i = 0; i < unassignedVariables.Count; i++) {
-                var currUnassigned = unassignedVariables[i];
+            for (int i = 0; i < unassignedVariables.Inner.Count; i++) {
+                var currUnassigned = unassignedVariables.Inner[i];
                 var involvedConstraints = Constraints
                                             .Where(c => c.GetInvolvedVariables().Contains(lastAssignment) &&
                                                         c.GetInvolvedVariables().Contains(currUnassigned.Variable))
@@ -126,7 +130,7 @@ namespace CSProblem
                 
                 //Prendo solo le variabili coinvolte in questi vincoli
                 var involvedVariables = involvedConstraints.SelectMany(c => c.GetInvolvedVariables()).Distinct().ToList();
-                var involvedUnassignedVariables = unassignedVariables.Where(uv => involvedVariables.Contains(uv.Variable)).ToList();
+                var involvedUnassignedVariables = new UnassignedVariablesCollection{Inner =  unassignedVariables.Inner.Where(uv => involvedVariables.Contains(uv.Variable)).ToList()};
 
                 var newDomain = new List<int>();
 
@@ -143,23 +147,23 @@ namespace CSProblem
                 }
 
                 //DEvo modificare il dominio della variabile corrente: 
-                unassignedVariables[i] = new CSVariableUnassignedStatus(currUnassigned.Variable, newDomain);
+                unassignedVariables.Inner[i] = new CSVariableUnassignedStatus(currUnassigned.Variable, newDomain);
             }
 
             return unassignedVariables;
         }
 
         private bool AreFulfillable(List<ICSConstraint> constraints, 
-                                    List<CSVariableAssignedStatus> assignedVariables,
-                                    List<CSVariableUnassignedStatus> unassignedVariables) {
+                                    AssignedVariablesCollection assignedVariables,
+                                    UnassignedVariablesCollection unassignedVariables) {
 
             //Se non ci sono pi variabili da istanziare, verifico che tutti i vincoli siano soddisfatti dall'environment passato
-            if (unassignedVariables.Count == 0) {
+            if (unassignedVariables.Inner.Count == 0) {
                 return constraints.All(c => c.IsSatisfied(assignedVariables));
             }
 
             //Scelgo la variabile corrente
-            var currVar = unassignedVariables[0];
+            var currVar = unassignedVariables.Inner[0];
 
             //Scorro il suo dominio
             foreach (var currVal in currVar.Domain) {
@@ -177,15 +181,16 @@ namespace CSProblem
             return false;
         }
 
-        private (List<CSVariableAssignedStatus>, List<CSVariableUnassignedStatus>) AssignVariable(CSVariable variable,
-            int value, List<CSVariableAssignedStatus> assignments, List<CSVariableUnassignedStatus> unassignments) {
-                var newAssignments = assignments.AddNewAssignment(variable, value);
-                var newUnassigned = unassignments.RemoveUnassigned(variable);
-                return (newAssignments, newUnassigned);
+        private (AssignedVariablesCollection, UnassignedVariablesCollection) AssignVariable(CSVariable variable,
+            int value, AssignedVariablesCollection assignments, UnassignedVariablesCollection unassignments) {
+                var newAssignments = assignments.Inner.AddNewAssignment(variable, value);
+                var newUnassigned = unassignments.Inner.RemoveUnassigned(variable);
+                return (new AssignedVariablesCollection{Inner = newAssignments}, 
+                        new UnassignedVariablesCollection{Inner = newUnassigned});
             }
 
-        CSVariableUnassignedStatus ChooseNextVariable(List<CSVariableUnassignedStatus> unassignedVariables) {
-            return unassignedVariables.OrderBy(v => v.Domain.Count()).First();
+        CSVariableUnassignedStatus ChooseNextVariable(UnassignedVariablesCollection unassignedVariables) {
+            return unassignedVariables.Inner.OrderBy(v => v.Domain.Count()).First();
         }
 
         public int ChooseValueForVariable(CSVariableUnassignedStatus unassignedVariable) {
@@ -197,7 +202,7 @@ namespace CSProblem
 
     public interface ICSConstraint {
         List<CSVariable> GetInvolvedVariables();
-        bool IsSatisfied(List<CSVariableAssignedStatus> environment);
+        bool IsSatisfied(AssignedVariablesCollection environment);
     }
 
     public class CSLambdaConstraint : ICSConstraint
@@ -215,9 +220,9 @@ namespace CSProblem
             return variables;
         }
 
-        public bool IsSatisfied(List<CSVariableAssignedStatus> environment)
+        public bool IsSatisfied(AssignedVariablesCollection environment)
         {
-            return LambdaFunc(variables.Select(v => environment.GetValueFor(v)).ToList());
+            return LambdaFunc(variables.Select(v => environment.Inner.GetValueFor(v)).ToList());
         }
     }
 
@@ -235,9 +240,9 @@ namespace CSProblem
             return variables;
         }
 
-        public bool IsSatisfied(List<CSVariableAssignedStatus> environment)
+        public bool IsSatisfied(AssignedVariablesCollection environment)
         {
-            return variables.Select(v => environment.GetValueFor(v))
+            return variables.Select(v => environment.Inner.GetValueFor(v))
                         .Distinct().Count() == variables.Count();
         }
     }
@@ -260,10 +265,10 @@ namespace CSProblem
             return orderedVariables;
         }
 
-        public bool IsSatisfied(List<CSVariableAssignedStatus> environment)
+        public bool IsSatisfied(AssignedVariablesCollection environment)
         {
             var orderedValues = orderedVariables.
-                Select(v => environment.GetValueFor(v)).ToList();
+                Select(v => environment.Inner.GetValueFor(v)).ToList();
             var higher = 0;
             var count = 0;
             foreach (var curValue in orderedValues) {
@@ -320,6 +325,14 @@ namespace CSProblem
             this.Variable = variable;
             this.Value = value;
         }
+    }
+
+    public class AssignedVariablesCollection {
+        public List<CSVariableAssignedStatus> Inner {get; set;}
+    }
+
+    public class UnassignedVariablesCollection {
+        public List<CSVariableUnassignedStatus> Inner {get; set;}
     }
 
     public static class HelperMethods {
@@ -392,7 +405,7 @@ namespace CSProblem
             var csp = new CSProblem(variables.SelectMany(v => v).ToList(), constraints);
             var solution = csp.Solve();
 
-            var orderedSolution = variables.Select(row => row.Select(variable => solution.GetValueFor(variable)));
+            var orderedSolution = variables.Select(row => row.Select(variable => solution.Inner.GetValueFor(variable)));
             return orderedSolution.Select(row => row.ToArray()).ToArray();
         }
 
