@@ -22,7 +22,7 @@ namespace CSProblem
 
             var res = Solve1(numSolution, 
                              solutions, 
-                             new AssignedVariablesCollection{Inner = new List<CSVariableAssignedStatus>()}, 
+                             new AssignedVariablesCollection(), 
                              new UnassignedVariablesCollection{
                                  Inner = Variables.Select(v => new CSVariableUnassignedStatus(v, v.Domain)).ToList()});
                 ;
@@ -43,7 +43,7 @@ namespace CSProblem
                             List<AssignedVariablesCollection> solutions,
                             AssignedVariablesCollection assignedVariables,
                             UnassignedVariablesCollection unassignedVariables) {
-            if (assignedVariables.Inner.Count == Variables.Count) {
+            if (assignedVariables.Count() == Variables.Count) {
                 //Devo aggiungere la soluzione corrente a quelle da ritornare
                 solutions.Add(assignedVariables);
 
@@ -183,9 +183,9 @@ namespace CSProblem
 
         private (AssignedVariablesCollection, UnassignedVariablesCollection) AssignVariable(CSVariable variable,
             int value, AssignedVariablesCollection assignments, UnassignedVariablesCollection unassignments) {
-                var newAssignments = assignments.Inner.AddNewAssignment(variable, value);
+                var newAssignments = assignments.AddNewAssignment(variable, value);
                 var newUnassigned = unassignments.Inner.RemoveUnassigned(variable);
-                return (new AssignedVariablesCollection{Inner = newAssignments}, 
+                return (newAssignments, 
                         new UnassignedVariablesCollection{Inner = newUnassigned});
             }
 
@@ -222,7 +222,7 @@ namespace CSProblem
 
         public bool IsSatisfied(AssignedVariablesCollection environment)
         {
-            return LambdaFunc(variables.Select(v => environment.Inner.GetValueFor(v)).ToList());
+            return LambdaFunc(variables.Select(v => environment.GetValueFor(v)).ToList());
         }
     }
 
@@ -242,7 +242,7 @@ namespace CSProblem
 
         public bool IsSatisfied(AssignedVariablesCollection environment)
         {
-            return variables.Select(v => environment.Inner.GetValueFor(v))
+            return variables.Select(v => environment.GetValueFor(v))
                         .Distinct().Count() == variables.Count();
         }
     }
@@ -268,7 +268,7 @@ namespace CSProblem
         public bool IsSatisfied(AssignedVariablesCollection environment)
         {
             var orderedValues = orderedVariables.
-                Select(v => environment.Inner.GetValueFor(v)).ToList();
+                Select(v => environment.GetValueFor(v)).ToList();
             var higher = 0;
             var count = 0;
             foreach (var curValue in orderedValues) {
@@ -328,7 +328,30 @@ namespace CSProblem
     }
 
     public class AssignedVariablesCollection {
-        public List<CSVariableAssignedStatus> Inner {get; set;}
+        private List<CSVariableAssignedStatus> Inner {get; set;}
+
+        public AssignedVariablesCollection()
+        {
+            Inner = new List<CSVariableAssignedStatus>();
+        }
+
+        private AssignedVariablesCollection(List<CSVariableAssignedStatus> mappings) {
+            this.Inner = mappings;
+        }
+
+        public int Count() {
+            return Inner.Count();
+        }
+
+        public AssignedVariablesCollection AddNewAssignment(CSVariable variable, int value) {
+            return new AssignedVariablesCollection(
+                Inner.Concat(new List<CSVariableAssignedStatus>{new CSVariableAssignedStatus(variable, value)}).ToList());
+        }
+
+        public int GetValueFor(CSVariable variable) {
+            return Inner.First(v => v.Variable == variable).Value;
+        }
+
     }
 
     public class UnassignedVariablesCollection {
@@ -336,13 +359,7 @@ namespace CSProblem
     }
 
     public static class HelperMethods {
-        public static int GetValueFor(this List<CSVariableAssignedStatus> assignements, CSVariable variable) {
-            return assignements.First(v => v.Variable == variable).Value;
-        }
 
-        public static List<CSVariableAssignedStatus> AddNewAssignment(this List<CSVariableAssignedStatus> assignments, CSVariable variable, int value) {
-            return assignments.Concat(new List<CSVariableAssignedStatus>{new CSVariableAssignedStatus(variable, value)}).ToList();
-        }
 
         public static List<CSVariableUnassignedStatus> RemoveUnassigned(this List<CSVariableUnassignedStatus> unassigned, CSVariable variable) {
             return unassigned.Where(v => v.Variable != variable).ToList();
@@ -405,7 +422,7 @@ namespace CSProblem
             var csp = new CSProblem(variables.SelectMany(v => v).ToList(), constraints);
             var solution = csp.Solve();
 
-            var orderedSolution = variables.Select(row => row.Select(variable => solution.Inner.GetValueFor(variable)));
+            var orderedSolution = variables.Select(row => row.Select(variable => solution.GetValueFor(variable)));
             return orderedSolution.Select(row => row.ToArray()).ToArray();
         }
 
