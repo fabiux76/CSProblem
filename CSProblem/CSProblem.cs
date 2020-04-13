@@ -328,14 +328,14 @@ namespace CSProblem
     }
 
     public class AssignedVariablesCollection {
-        private List<CSVariableAssignedStatus> Inner {get; set;}
+        private Dictionary<CSVariable, int> Inner {get; set;}
 
         public AssignedVariablesCollection()
         {
-            Inner = new List<CSVariableAssignedStatus>();
+            Inner = new Dictionary<CSVariable, int>();
         }
 
-        private AssignedVariablesCollection(List<CSVariableAssignedStatus> mappings) {
+        private AssignedVariablesCollection(Dictionary<CSVariable, int> mappings) {
             this.Inner = mappings;
         }
 
@@ -344,12 +344,14 @@ namespace CSProblem
         }
 
         public AssignedVariablesCollection AddNewAssignment(CSVariable variable, int value) {
-            return new AssignedVariablesCollection(
-                Inner.Concat(new List<CSVariableAssignedStatus>{new CSVariableAssignedStatus(variable, value)}).ToList());
+
+            var copy = new Dictionary<CSVariable, int>(Inner);
+            copy[variable] = value;
+            return new AssignedVariablesCollection{Inner = copy};
         }
 
         public int GetValueFor(CSVariable variable) {
-            return Inner.First(v => v.Variable == variable).Value;
+            return Inner[variable];
         }
 
     }
